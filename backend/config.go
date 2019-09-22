@@ -50,6 +50,7 @@ func LoadStructFromMap(data map[string]string, o interface{}) (err error) {
 	return
 }
 
+// influx-proxy配置
 type NodeConfig struct {
 	ListenAddr   string
 	DB           string
@@ -61,6 +62,7 @@ type NodeConfig struct {
 	QueryTracing int
 }
 
+// 后端influxdb配置
 type BackendConfig struct {
 	URL             string
 	DB              string
@@ -80,6 +82,7 @@ type RedisConfigSource struct {
 	zone   string
 }
 
+// 连接redis, 绑定对应的influx-proxy节点名称
 func NewRedisConfigSource(options *redis.Options, node string) (rcs *RedisConfigSource) {
 	rcs = &RedisConfigSource{
 		client: redis.NewClient(options),
@@ -88,7 +91,9 @@ func NewRedisConfigSource(options *redis.Options, node string) (rcs *RedisConfig
 	return
 }
 
+// 从redis加载该节点对应的配置
 func (rcs *RedisConfigSource) LoadNode() (nodecfg NodeConfig, err error) {
+	// 先加载默认配置, 在加载单独的配置
 	val, err := rcs.client.HGetAll("default_node").Result()
 	if err != nil {
 		log.Printf("redis load error: b:%s", rcs.node)
@@ -116,6 +121,7 @@ func (rcs *RedisConfigSource) LoadNode() (nodecfg NodeConfig, err error) {
 	return
 }
 
+// 从redis读出所有后端的influxdb配置加载到map中
 func (rcs *RedisConfigSource) LoadBackends() (backends map[string]*BackendConfig, err error) {
 	backends = make(map[string]*BackendConfig)
 
@@ -139,6 +145,7 @@ func (rcs *RedisConfigSource) LoadBackends() (backends map[string]*BackendConfig
 	return
 }
 
+// 加载单个的influxdb节点
 func (rcs *RedisConfigSource) LoadConfigFromRedis(name string) (cfg *BackendConfig, err error) {
 	val, err := rcs.client.HGetAll("b:" + name).Result()
 	if err != nil {

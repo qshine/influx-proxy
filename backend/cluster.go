@@ -117,6 +117,7 @@ func NewInfluxCluster(cfgsrc *RedisConfigSource, nodecfg *NodeConfig) (ic *Influ
 		ic.ticker = time.NewTicker(time.Second * time.Duration(nodecfg.Interval))
 	}
 
+	// 禁用语句
 	err = ic.ForbidQuery(ForbidCmds)
 	if err != nil {
 		panic(err)
@@ -216,6 +217,7 @@ func (ic *InfluxCluster) AddNext(ba BackendAPI) {
 	return
 }
 
+// 从redis读出所有后端的influxdb的连接client加载到map中
 func (ic *InfluxCluster) loadBackends() (backends map[string]BackendAPI, bas []BackendAPI, err error) {
 	backends = make(map[string]BackendAPI)
 
@@ -247,6 +249,7 @@ func (ic *InfluxCluster) loadBackends() (backends map[string]BackendAPI, bas []B
 	return
 }
 
+// 加载所有的measurement
 func (ic *InfluxCluster) loadMeasurements(backends map[string]BackendAPI) (m2bs map[string][]BackendAPI, err error) {
 	m2bs = make(map[string][]BackendAPI)
 
@@ -255,6 +258,7 @@ func (ic *InfluxCluster) loadMeasurements(backends map[string]BackendAPI) (m2bs 
 		return
 	}
 
+	// 存储每个measurement需要写入的backend的httpClient, 一对一/一对多
 	for name, bs_names := range m_map {
 		var bss []BackendAPI
 		for _, bs_name := range bs_names {
@@ -272,11 +276,13 @@ func (ic *InfluxCluster) loadMeasurements(backends map[string]BackendAPI) (m2bs 
 }
 
 func (ic *InfluxCluster) LoadConfig() (err error) {
+	// 加载所有的后端influxdb节点的httpClient
 	backends, bas, err := ic.loadBackends()
 	if err != nil {
 		return
 	}
 
+	// 加载每个measurement对应要写入的influxdb的httpClient
 	m2bs, err := ic.loadMeasurements(backends)
 	if err != nil {
 		return
@@ -304,6 +310,7 @@ func (ic *InfluxCluster) Ping() (version string, err error) {
 	return
 }
 
+// 校验查询语句是否符合危险
 func (ic *InfluxCluster) CheckQuery(q string) (err error) {
 	ic.lock.RLock()
 	defer ic.lock.RUnlock()
@@ -328,6 +335,7 @@ func (ic *InfluxCluster) CheckQuery(q string) (err error) {
 	return
 }
 
+// 首先精确查找, 如果没有使用前缀, 最后使用默认值
 func (ic *InfluxCluster) GetBackends(key string) (backends []BackendAPI, ok bool) {
 	ic.lock.RLock()
 	defer ic.lock.RUnlock()
@@ -351,6 +359,7 @@ func (ic *InfluxCluster) GetBackends(key string) (backends []BackendAPI, ok bool
 	return
 }
 
+// 执行influxdb的query, 检验查询
 func (ic *InfluxCluster) Query(w http.ResponseWriter, req *http.Request) (err error) {
 	atomic.AddInt64(&ic.stats.QueryRequests, 1)
 	defer func(start time.Time) {
@@ -397,6 +406,7 @@ func (ic *InfluxCluster) Query(w http.ResponseWriter, req *http.Request) (err er
 		return
 	}
 
+	// 找出该measurement对应的所有influxdb客户端
 	apis, ok := ic.GetBackends(key)
 	if !ok {
 		log.Printf("unknown measurement: %s,the query is %s\n", key, q)
@@ -409,6 +419,7 @@ func (ic *InfluxCluster) Query(w http.ResponseWriter, req *http.Request) (err er
 	// same zone first, other zone. pass non-active.
 	// TODO: better way?
 
+	// 该循环是优先查询 本地 && 激活状态实例 && 有度权限 的是咧
 	for _, api := range apis {
 		if api.GetZone() != ic.Zone {
 			continue
@@ -422,6 +433,7 @@ func (ic *InfluxCluster) Query(w http.ResponseWriter, req *http.Request) (err er
 		}
 	}
 
+	// 如果上一个查询失败, 则会去读 异地 && 激活 的实例, 也就是 replica
 	for _, api := range apis {
 		if api.GetZone() == ic.Zone {
 			continue

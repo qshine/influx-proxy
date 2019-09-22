@@ -40,6 +40,7 @@ func (hs *HttpService) Register(mux *http.ServeMux) {
 	mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
 }
 
+// 重新加载配置
 func (hs *HttpService) HandlerReload(w http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 	w.Header().Add("X-Influxdb-Version", backend.VERSION)
@@ -67,6 +68,7 @@ func (hs *HttpService) HandlerPing(w http.ResponseWriter, req *http.Request) {
 	return
 }
 
+// 查询, 必须保证db和该influx-proxy绑定的db一致
 func (hs *HttpService) HandlerQuery(w http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 	w.Header().Add("X-Influxdb-Version", backend.VERSION)
@@ -118,7 +120,7 @@ func (hs *HttpService) HandlerWrite(w http.ResponseWriter, req *http.Request) {
 		b, err := gzip.NewReader(req.Body)
 		if err != nil {
 			w.WriteHeader(400)
-			w.Write([]byte("unable to decode gzip body"))
+			w.Write([]byte("un able to decode gzip body"))
 			return
 		}
 		defer b.Close()

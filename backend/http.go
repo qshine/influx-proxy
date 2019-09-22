@@ -50,6 +50,7 @@ type HttpBackend struct {
 	WriteOnly int
 }
 
+// 创建一个http客户端
 func NewHttpBackend(cfg *BackendConfig) (hb *HttpBackend) {
 	hb = &HttpBackend{
 		client: &http.Client{
@@ -67,6 +68,7 @@ func NewHttpBackend(cfg *BackendConfig) (hb *HttpBackend) {
 		running:   true,
 		WriteOnly: cfg.WriteOnly,
 	}
+	// 使用一个协程对 对应的influxbd节点进行健康检查
 	go hb.CheckActive()
 	return
 }
