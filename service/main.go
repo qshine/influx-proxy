@@ -13,8 +13,8 @@ import (
 	"os"
 	"time"
 
-	lumberjack "gopkg.in/natefinch/lumberjack.v2"
-	redis "gopkg.in/redis.v5"
+	"gopkg.in/natefinch/lumberjack.v2"
+	"gopkg.in/redis.v5"
 
 	"github.com/shell909090/influx-proxy/backend"
 )
@@ -29,11 +29,13 @@ var (
 	LogFilePath string
 )
 
+// 初始化变量
 func init() {
 	log.SetFlags(log.LstdFlags | log.Lmicroseconds | log.Lshortfile)
 
 	flag.StringVar(&LogFilePath, "log-file-path", "/var/log/influx-proxy.log", "output file")
 	flag.StringVar(&ConfigFile, "config", "", "config file")
+	// node指的是influx-proxy的实例名称
 	flag.StringVar(&NodeName, "node", "l1", "node name")
 	flag.StringVar(&RedisAddr, "redis", "localhost:6379", "config file")
 	flag.StringVar(&RedisPwd, "redis-pwd", "", "config file")
@@ -46,6 +48,7 @@ type Config struct {
 	Node string
 }
 
+// 加载配置文件
 func LoadJson(configfile string, cfg interface{}) (err error) {
 	file, err := os.Open(configfile)
 	if err != nil {
@@ -96,18 +99,23 @@ func main() {
 		cfg.DB = RedisDb
 	}
 
+	// 连接redis
 	rcs := backend.NewRedisConfigSource(&cfg.Options, cfg.Node)
 
+	// 加载api节点配置
 	nodecfg, err := rcs.LoadNode()
 	if err != nil {
 		log.Printf("config source load failed.")
 		return
 	}
 
+	// 加载后端influxdb配置, 参数是redis和api的配置信息
 	ic := backend.NewInfluxCluster(rcs, &nodecfg)
 	ic.LoadConfig()
 
+	// 构建influx-proxy的http服务
 	mux := http.NewServeMux()
+	// 注册相关的路由函数
 	NewHttpService(ic, nodecfg.DB).Register(mux)
 
 	log.Printf("http service start.")
@@ -119,6 +127,8 @@ func main() {
 	if nodecfg.IdleTimeout <= 0 {
 		server.IdleTimeout = 10 * time.Second
 	}
+
+	// 启动服务
 	err = server.ListenAndServe()
 	if err != nil {
 		log.Print(err)

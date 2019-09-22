@@ -21,6 +21,7 @@ type FileBackend struct {
 	meta     *os.File
 }
 
+// 文件, 当后端比如influxdb挂掉, 会写入文件, 恢复后重新写入influxdb
 func NewFileBackend(filename string) (fb *FileBackend, err error) {
 	fb = &FileBackend{
 		filename: filename,
