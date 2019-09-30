@@ -134,6 +134,7 @@ func (hs *HttpService) HandlerWrite(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	// 写入后端机器
 	err = hs.ic.Write(p)
 	if err == nil {
 		w.WriteHeader(204)

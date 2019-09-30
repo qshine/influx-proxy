@@ -472,6 +472,7 @@ func (ic *InfluxCluster) WriteRow(line []byte) {
 		return
 	}
 
+	// 获取后端所有influxdb服务
 	bs, ok := ic.GetBackends(key)
 	if !ok {
 		log.Printf("new measurement: %s\n", key)
@@ -492,6 +493,7 @@ func (ic *InfluxCluster) WriteRow(line []byte) {
 	return
 }
 
+// 把数据写入后端influxdb机器
 func (ic *InfluxCluster) Write(p []byte) (err error) {
 	atomic.AddInt64(&ic.stats.WriteRequests, 1)
 	defer func(start time.Time) {

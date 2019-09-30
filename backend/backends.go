@@ -52,10 +52,12 @@ func NewBackends(cfg *BackendConfig, name string) (bs *Backends, err error) {
 		return
 	}
 
+	// 开启协程, 从channel读数据到influxdb服务
 	go bs.worker()
 	return
 }
 
+// goroutine从channel中读出数据写入influxdb
 func (bs *Backends) worker() {
 	for bs.running {
 		select {
@@ -85,6 +87,7 @@ func (bs *Backends) worker() {
 	}
 }
 
+// 把数据写入channel中
 func (bs *Backends) Write(p []byte) (err error) {
 	if !bs.running {
 		return io.ErrClosedPipe
