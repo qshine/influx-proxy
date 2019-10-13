@@ -180,6 +180,7 @@ func (rcs *RedisConfigSource) LoadConfigFromRedis(name string) (cfg *BackendConf
 	return
 }
 
+// 映射每个measurement对应的inflxudb实例
 func (rcs *RedisConfigSource) LoadMeasurements() (m_map map[string][]string, err error) {
 	m_map = make(map[string][]string, 0)
 

@@ -68,7 +68,7 @@ func NewHttpBackend(cfg *BackendConfig) (hb *HttpBackend) {
 		running:   true,
 		WriteOnly: cfg.WriteOnly,
 	}
-	// 使用一个 goroutine 对 对应的influxbd节点进行健康检查
+	// 使用一个 goroutine 对 对应的influxdb节点进行健康检查
 	go hb.CheckActive()
 	return
 }

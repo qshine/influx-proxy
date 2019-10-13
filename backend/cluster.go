@@ -130,6 +130,7 @@ func NewInfluxCluster(cfgsrc *RedisConfigSource, nodecfg *NodeConfig) (ic *Influ
 	}
 
 	// feature
+	// 开启goroutine统计信息
 	go ic.statistics()
 	return
 }

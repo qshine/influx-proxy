@@ -33,6 +33,7 @@ type Backends struct {
 	wg               sync.WaitGroup
 }
 
+// 为每一个influxdb实例建立连接
 // maybe ch_timer is not the best way.
 func NewBackends(cfg *BackendConfig, name string) (bs *Backends, err error) {
 	bs = &Backends{
@@ -47,11 +48,13 @@ func NewBackends(cfg *BackendConfig, name string) (bs *Backends, err error) {
 		rewriter_running: false,
 		MaxRowLimit:      int32(cfg.MaxRowLimit),
 	}
+	// 当写入后端inflxudb失败, 会写入文件
 	bs.fb, err = NewFileBackend(name)
 	if err != nil {
 		return
 	}
 
+	// 打开goroutine消费数据, 写入influxdb
 	go bs.worker()
 	return
 }
