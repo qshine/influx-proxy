@@ -18,7 +18,7 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/shell909090/influx-proxy/monitor"
+	"influx-proxy/monitor"
 )
 
 var (
@@ -117,11 +117,11 @@ func NewInfluxCluster(cfgsrc *RedisConfigSource, nodecfg *NodeConfig) (ic *Influ
 		ic.ticker = time.NewTicker(time.Second * time.Duration(nodecfg.Interval))
 	}
 
-	err = ic.ForbidQuery(ForbidCmds)
-	if err != nil {
-		panic(err)
-		return
-	}
+	//err = ic.ForbidQuery(ForbidCmds)
+	//if err != nil {
+	//	panic(err)
+	//	return
+	//}
 	err = ic.EnsureQuery(SupportCmds)
 	if err != nil {
 		panic(err)
